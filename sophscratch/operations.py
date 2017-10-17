@@ -1,5 +1,7 @@
 import numpy as np
+
 from .core import BaseTensor, Operation
+
 
 class add(Operation):
     """ Returns x+y element-wise
@@ -129,9 +131,7 @@ class relu(Operation):
         """Computes the gradients for relu
         """
 
-        out = self.output
-
-        return grad * out
+        return grad * self.output
 
 
 class softmax(Operation):
@@ -150,19 +150,48 @@ class softmax(Operation):
         """Compute the output of the softmax operation
         """
 
-        a_value -= np.max(a_value,axis=1)[:,np.newaxis]
+        a_value = a_value - np.max(a_value, axis=1, keepdims=True)
+        e = np.exp(a_value)
 
-        return np.exp(a_value) / np.sum(np.exp(a_value), axis=1)[:, None]
+        return e / np.sum(e, axis=1, keepdims=True)
+
+    def gradient(self, grad):
+        """Computes the gradients for `softmax`.
+        """
+
+        jacobian
+
+        softmax = self.output
+        return
+    (grad - np.sum(grad * softmax, axis=1, keepdims=True)) * softmax
+
+
+class log_softmax(Operation):
+    """Returns the softmax of a.
+    """
+
+    def __init__(self, a):
+        """Construct softmax
+
+        Args:
+          a: Input node
+        """
+        super().__init__([a])
+
+    def compute(self, a_value):
+        """Compute the output of the softmax operation
+        """
+
+        a_value = a_value - np.max(a_value, axis=1, keepdims=True)
+
+        return a_value - np.log(np.sum(np.exp(a_value), axis=1, keepdims=True))
 
     def gradient(self, grad):
         """Computes the gradients for `softmax`.
         """
 
         softmax = self.output
-        return (grad - np.reshape(
-            np.sum(grad * softmax, 1),
-            [-1, 1]
-        )) * softmax
+        return grad * (self.inputs[0] - np.mean(self.output * self.inputs[0], axis=1, keepdims=True))
 
 
 class log(Operation):
