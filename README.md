@@ -1,6 +1,8 @@
 # sophscratch
 Deep learning from scratch with python
 
+See the included [notebook](/Deep Learning from Scratch.ipynb) for a demo
+
 
 # for demo purposes only
 
