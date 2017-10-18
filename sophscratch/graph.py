@@ -9,53 +9,40 @@ from .core import *
 
 
 
-class Graph:
-    """Represents a computational graph
-    """
+def visualize_graph(node):
 
-    def __init__(self):
-        """Construct Graph"""
-        self.operations = []
-        self.placeholders = []
-        self.variables = []
+    tensors = traverse_postorder(node)
 
-    def as_default(self):
-        global _default_graph
-        _default_graph = self
+    vis_g = graphviz.Digraph(comment='Tensor graph')
+    vis_g.graph_attr['rankdir'] = 'LR'
+    vis_g.graph_attr['nodesep'] = '.1'
+    vis_g.graph_attr['ranksep'] = '.2'
+    vis_g.graph_attr['ratio'] = 'compress'
+    vis_g.node_attr["style"] = "rounded"
+    vis_g.node_attr["shape"] = "box"
 
-    def visualize(self):
 
-        vis_g = graphviz.Digraph(comment='Tensor graph')
-        vis_g.graph_attr['rankdir'] = 'LR'
-        vis_g.graph_attr['nodesep'] = '.1'
-        vis_g.graph_attr['ranksep'] = '.2'
-        vis_g.graph_attr['ratio'] = 'compress'
-        vis_g.node_attr["style"] = "rounded"
-        vis_g.node_attr["shape"] = "box"
+    for tensor in tensors:
+        curr_id = hex(id(tensor))
+        curr_name = tensor.__class__.__name__
+        vis_g.node(curr_id, curr_name)
 
-        tensors = self.operations + self.placeholders + self.variables
+    for tensor in tensors:
+        if not getattr(tensor, "input_nodes", None):
+            continue
+        curr_id = hex(id(tensor))
+        for i_node in tensor.input_nodes:
+            in_id = hex(id(i_node))
+            vis_g.edge(in_id, curr_id)
 
-        for tensor in tensors:
-            curr_id = hex(id(tensor))
-            curr_name = tensor.__class__.__name__
-            vis_g.node(curr_id, curr_name)
-
-        for tensor in traverse_postorder(J):
-            if not getattr(tensor, "input_nodes", None):
-                continue
-            curr_id = hex(id(tensor))
-            for i_node in tensor.input_nodes:
-                in_id = hex(id(i_node))
-                vis_g.edge(in_id, curr_id)
-
-        return vis_g
+    return vis_g
 
 
 class Session:
     """Represents a particular execution of a computational graph.
     """
 
-    def run(self, operation, feed_dict={}):
+    def run(self, operation, feed_dict={}, debug=False):
         """Computes the output of an operation
         """
 
@@ -78,6 +65,9 @@ class Session:
 
                 # Compute the output of this operation
                 node.output = node.compute(*node.inputs)
+
+                if debug:
+                    print(f"{node.get_name()}: {node.output}")
 
             # Convert lists to numpy arrays
             if type(node.output) == list:
@@ -192,3 +182,10 @@ def traverse_postorder(operation):
 
     recurse(operation)
     return nodes_postorder
+
+def lr_decay(e_o, e_t, t, k):
+    if k >= t:
+        return e_t
+    alpha = k/t
+    e_k = (1 - alpha)*e_o + alpha*e_t
+    return e_k
