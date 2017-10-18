@@ -151,6 +151,7 @@ class softmax(Operation):
         """
 
         a_value = a_value - np.max(a_value, axis=1, keepdims=True)
+        # a_value = np.clip(a_value, -745, np.inf)
         e = np.exp(a_value)
 
         return e / np.sum(e, axis=1, keepdims=True)
@@ -159,14 +160,18 @@ class softmax(Operation):
         """Computes the gradients for `softmax`.
         """
 
-        jacobian
+        S = self.output
 
-        softmax = self.output
-        return
-    (grad - np.sum(grad * softmax, axis=1, keepdims=True)) * softmax
+        # step1 = (np.expand_dims(np.eye(S.shape[1]), axis=0) -
+        #     np.expand_dims(S, axis=1) )
+        # step2 = np.expand_dims(S, axis=2) * step1
+        # return np.sum(step2, axis=1)
+
+        return (grad -
+                np.sum(grad * S, 1, keepdims=True)) * S
 
 
-class log_softmax(Operation):
+class softcross(Operation):
     """Returns the softmax of a.
     """
 
