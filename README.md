@@ -15,7 +15,7 @@ pip install .
 or make it editable
 
 ```bash
-pip install . -e
+pip install -e .
 ```
 
 # credit
