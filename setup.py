@@ -7,6 +7,9 @@ setup(
     long_description="",
     author='Sophie Searcy',
     author_email='s@soph.info',
+    install_requires=[
+          'graphviz',
+      ],
     url='',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
